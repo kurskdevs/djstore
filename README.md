@@ -1,2 +1,2 @@
 # djstore
-Web-story on django
+Web-store on django
