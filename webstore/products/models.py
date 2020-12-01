@@ -44,7 +44,7 @@ class Product(models.Model):
         return self.title
 
 
-class Earphones(Product):
+class Earphone(Product):
     model_type = models.CharField(max_length=255, verbose_name='Тип модели')
     connect_type = models.CharField(max_length=255, verbose_name='Тип подключения')
     microphone = models.BooleanField(default=False, verbose_name='Наличие микрофона')
