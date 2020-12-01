@@ -6,18 +6,37 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 User = get_user_model()
 
 
-# Create your models here.
+class LatestProductsManager:
 
-# ***********
+    @staticmethod
+    def get_products_for_main_page(*args, **kwargs):
+        """
+        Функция для получения определенного количества последних добавленных товаров
+        по заданной категории
+        :param args: lowercase моделей (Earphone, PowerBank)
+        :param kwargs: добавление key аргумента with_respect_to для сортировки товаров
+        :return: Список поледних добавленных товаров
+        """
 
-# 1 Category
-# 2 Product
-# 3 CartProduct
-# 4 Cart
-# 5 Order
+        with_respect_to = kwargs.get('with_respect_to')
+        products = []
+        ct_models = ContentType.objects.filter(model__in=args)
+        for ct_model in ct_models:
+            model_products = ct_model.model_class()._base_manager.all().order_by('-id')[:5]
+            products.extend(model_products)
+        if with_respect_to:
+            ct_model = ContentType.objects.filter(model=with_respect_to)
+            if ct_model.exists():
+                if with_respect_to in args:  # проверяем, что бы пользователь не ошибся с запросом
+                    return sorted(
+                        products, key=lambda x: x.__class__._meta.model_name.startswith(with_respect_to), reverse=True
+                    )
 
-# 6 Customer
-# 7 Specification
+        return products
+
+
+class LatestProducts:
+    objects = LatestProductsManager()
 
 
 class Category(models.Model):
@@ -63,19 +82,6 @@ class PowerBank(Product):
 
     def __str__(self):
         return f"{self.category.name} : {self.title}"
-
-
-# Earphones
-# type
-# connect_type
-# microphone
-# noise suppression
-
-# Powerbank
-# type
-# capacity
-# amperage
-# input_connectors
 
 
 # Объект корзины
