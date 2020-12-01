@@ -65,8 +65,6 @@ class PowerBank(Product):
         return f"{self.category.name} : {self.title}"
 
 
-
-
 # Earphones
 # type
 # connect_type
