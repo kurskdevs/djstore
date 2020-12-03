@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django import forms
 from django.forms import ModelForm, ValidationError
+from django.utils.safestring import mark_safe
 
 from .models import *
 
@@ -8,13 +9,13 @@ from PIL import Image
 
 
 class EarphoneAdminForm(ModelForm):
-    MIN_RESOLUTION = (400, 400)
 
     # добавление вспомогательного текста в админке при загрузке изображений
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['image'].help_text = 'Загружайте изображния с минимальным расшмрением {}x{}'.format(
-            *self.MIN_RESOLUTION)
+        self.fields['image'].help_text = mark_safe(
+            '<span style="color:red; font-size:14px:">Загружайте изображния с минимальным расшмрением {}x{}</span>'.format(
+                *self.MIN_RESOLUTION))
 
     # функция для ограничения по загрузке изображений
     def clean_image(self):
@@ -23,9 +24,14 @@ class EarphoneAdminForm(ModelForm):
         # отрытие изображения для получения его параметров
         img = Image.open(image)
         # получаем минимальные размеры
-        min_height, min_width = self.MIN_RESOLUTION
+        min_height, min_width = Product.MIN_RESOLUTION
+        max_height, max_width = Product.MAX_RESOLUTION
+        if image.size > Product.MAX_IMAGE_SIZE:
+            raise ValidationError('РАзмер изображения больше допустимого')
         if img.height < min_height or img.width < min_width:
             raise ValidationError('Разрешение изображения меньше минимального!')
+        if img.height > max_height or img.width > max_width:
+            raise ValidationError('Разрешение изображения больше максимального!')
 
 
 # Прописываем условия, что бы при создании, например, наушников, можно было выбрать только категорию "Наушники"
