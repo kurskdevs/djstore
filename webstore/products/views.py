@@ -15,6 +15,7 @@ class ProductDetailView(DetailView):
         'power_bank': PowerBank
     }
 
+    #  представление для вывода информации из нескольких моделей
     def dispatch(self, request, *args, **kwargs):
         self.model = self.CT_MODEL_MODEL_CLASS[kwargs['ct_model']]
         self.queryset = self.model._base_manager.all()
