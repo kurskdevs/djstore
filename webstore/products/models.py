@@ -1,8 +1,13 @@
+import sys
+
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from PIL import Image
+
+from io import BytesIO
 
 User = get_user_model()
 
@@ -76,15 +81,30 @@ class Product(models.Model):
         return self.title
 
     def save(self, *args, **kwargs):
-        image = self.image
-        img = Image.open(image)
-        min_height, min_width = self.MIN_RESOLUTION
-        max_height, max_width = self.MAX_RESOLUTION
-        if img.height < min_height or img.width < min_width:
-            raise MinResolutionErrorException('Разрешение изображения меньше минимального!')
-        if img.height > max_height or img.width > max_width:
-            raise MaxResolutionErrorException('Разрешение изображения больше максимального!')
-        return image
+        # функция запрета на загрузку изображений
+        # image = self.image
+        # img = Image.open(image)
+        # min_height, min_width = self.MIN_RESOLUTION
+        # max_height, max_width = self.MAX_RESOLUTION
+        # if img.height < min_height or img.width < min_width:
+        #     raise MinResolutionErrorException('Разрешение изображения меньше минимального!')
+        # if img.height > max_height or img.width > max_width:
+        #     raise MaxResolutionErrorException('Разрешение изображения больше максимального!')
+
+        image = self.image  # получение изображения
+        img = Image.open(image)  # открытие изображения через библиотеку PIL
+        new_img = img.convert('RGB')  # конвертирование изображения в RGB
+        resized_new_img = new_img.resize((400, 400), Image.ANTIALIAS)  # обрезка изображения
+        filestream = BytesIO()  # получение байтового потока изображения
+        resized_new_img.save(filestream, 'JPEG', quality=90) 
+        filestream.seek(0)
+        name = '{}.{}'.format(*self.image.name.split('.'))
+        self.image = InMemoryUploadedFile(
+            filestream, 'ImageField', name, 'jpeg/image', sys.getsizeof(filestream), None
+            # запись в стандартную переменную
+        )
+
+        super().save(*args, **kwargs)
 
 
 class Earphone(Product):
