@@ -5,11 +5,18 @@ from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.urls import reverse
 from PIL import Image
 
 from io import BytesIO
 
 User = get_user_model()
+
+
+#  функция для получения url из модели
+def get_product_url(obj, viewname):
+    ct_model = obj.__class__._meta.model_name
+    return reverse(viewname, kwargs={'ct_model': ct_model, 'slug': obj.slug})
 
 
 class MinResolutionErrorException(Exception):
@@ -96,7 +103,7 @@ class Product(models.Model):
         new_img = img.convert('RGB')  # конвертирование изображения в RGB
         resized_new_img = new_img.resize((400, 400), Image.ANTIALIAS)  # обрезка изображения
         filestream = BytesIO()  # получение байтового потока изображения
-        resized_new_img.save(filestream, 'JPEG', quality=90) 
+        resized_new_img.save(filestream, 'JPEG', quality=90)
         filestream.seek(0)
         name = '{}.{}'.format(*self.image.name.split('.'))
         self.image = InMemoryUploadedFile(
@@ -117,6 +124,9 @@ class Earphone(Product):
     def __str__(self):
         return f"{self.category.name} : {self.title}"
 
+    def get_absolut_url(self):
+        return get_product_url(self, 'product_detail')
+
 
 class PowerBank(Product):
     accumulator_type = models.CharField(max_length=255, verbose_name='Тип аккумулятора')
@@ -126,6 +136,9 @@ class PowerBank(Product):
 
     def __str__(self):
         return f"{self.category.name} : {self.title}"
+
+    def get_absolut_url(self):
+        return get_product_url(self, 'product_detail')
 
 
 # Объект корзины
